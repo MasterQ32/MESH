@@ -359,6 +359,28 @@ Der Nachrichteninhalt sieht wiefolgt aus:
 
 ## Error
 
+Ein *Fehler-Paket* wird dann verschickt, wenn bei der Übertragung oder der
+Interpretation eines Systempakets ein Fehler auftrat. Das Paket wurde nicht
+bearbeitet und sollte noch einmal geschickt werden, falls die Funktion
+ausgeführt werden soll.
+
+Im Datenblock des Pakets sind folgende Informationen enthalten:
+
+| Offset | Typ | Beschreibung                                                  |
+|--------|-----|---------------------------------------------------------------|
+| `0x00` | u8  | Befehl, welcher den Fehler ausgelöst hat.                     |
+| `0x01` | u8  | Fehlercode                                                    |
+| `0x02` | u8  | Fehler-Information (hängt vom Fehlercode ab)                  |
+
+### Fehlercodes
+
+| Fehler-Code | Beschreibung                                                   |
+|-------------|----------------------------------------------------------------|
+|      `0x00` | Unspezifizierter Fehler                                        |
+|      `0x01` | Ungültige Checksumme                                           |
+|      `0x02` | Ungültiger Register-Zugriff (Register existiert nicht)         |
+|      `0x03` | Ungültige Device-Info-ID                                       |
+
 <todo>
 	Fehlerpackete definieren
 </todo>
@@ -426,5 +448,5 @@ Dieses Dokument verwendet einige Datentypen, welche hier spezifiziert werden:
 
 
 
-<script type="text/javascript" src="/home/felix/artifacts/mdext/toc.js"></script>
-<script type="text/javascript" src="/home/felix/artifacts/mdext/todo.js"></script>
+<script type="text/javascript" src="http://random-projects.net/public/toc.js"></script>
+<script type="text/javascript" src="http://random-projects.net/public/todo.js"></script>
