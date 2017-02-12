@@ -372,6 +372,8 @@ Im Datenblock des Pakets sind folgende Informationen enthalten:
 | `0x01` | u8  | Fehlercode                                                    |
 | `0x02` | u8  | Fehler-Information (hängt vom Fehlercode ab)                  |
 
+Fehlerpakete sind immer Antwort-Pakete, das `Response`-Bit ist also gesetzt.
+
 ### Fehlercodes
 
 | Fehler-Code | Beschreibung                                                   |
@@ -380,10 +382,12 @@ Im Datenblock des Pakets sind folgende Informationen enthalten:
 |      `0x01` | Ungültige Checksumme                                           |
 |      `0x02` | Ungültiger Register-Zugriff (Register existiert nicht)         |
 |      `0x03` | Ungültige Device-Info-ID                                       |
+|      `0x04` | Unbekannter Befehl                                             |
+|      `0x05` | Data too small                                                 |
 
-<todo>
-	Fehlerpackete definieren
-</todo>
+### Fehlerinformation
+Für alle vom System erzeugten Befehle wird der ungültige Wert in der Fehler-
+Information hinterlegt.
 
 ## Write
 Schreibt einen Wert in ein Geräte-Register. Jeder Schreibbefehl besitzt eine

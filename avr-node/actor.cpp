@@ -60,6 +60,16 @@ bool USART_CanRead(void)
 namespace mesh
 {
 	uint8_t localAddress;
+	
+	enum class errid : uint8_t
+	{
+		undefined         = 0x00,
+		invalidChecksum   = 0x01,
+		invalidRegister   = 0x02,
+		invalidDeviceInfo = 0x03,
+		unknownCommand    = 0x04,
+		dataTooSmall      = 0x05,
+	};
 
 	struct 
 	{
@@ -93,6 +103,9 @@ namespace mesh
 	};
 	
 	message_t * receive();
+	
+	// returns always nullptr
+	message_t * discard(message_t * in, errid error, uint8_t errinfo);
 	
 	namespace callback
 	{
@@ -209,19 +222,22 @@ int main()
 	77 20 00 FE 01 00 00
 	
 	Query Device Info:
-	77 20 00 FE 02 01 01 00
+	77 20 00 FE 02 01 01 01
 	
 	Query Device Name:
-	77 20 00 FE 02 01 02 00
+	77 20 00 FE 02 01 02 02
 	
 	Read register(0):
 	77 20 00 FE 06 01 00 00
 	
 	Read register(15): (LED 5)
-	77 20 00 FE 06 01 00 00
+	77 20 00 FE 06 01 15 15
 	
 	Write register(80, AA):
 	77 20 00 FE 05 03 80 AA 00 2A
+	
+	Write register(80, 55):
+	77 20 00 FE 05 03 80 55 00 D5
 */
 
 namespace mesh
@@ -237,7 +253,7 @@ namespace mesh
 		0x00
 	};
 	
-	static message_t * receiveRaw(bool & validChecksum)
+	static message_t * receiveRaw(uint8_t & checksum)
 	{
 		message_t * msg = &receivedMessage;
 		msg->magic = USART_Receive();
@@ -250,31 +266,47 @@ namespace mesh
 		msg->command = USART_Receive();
 		msg->length = USART_Receive();
 		
-		uint16_t cs0 = 0;
+		checksum = 0;
 		for(int i = 0; i < msg->length; i++) {
 			messageBuffer[i] = USART_Receive();
-			cs0 += messageBuffer[i];
+			checksum += messageBuffer[i];
 		}
 		msg->checksum = USART_Receive();
-		
-		validChecksum = (msg->checksum == cs0);
 		
 		return msg;
 	}
 	
-	static void write(void const * buffer, uint16_t len)
+	static uint8_t write(void const * buffer, uint16_t len)
 	{
+		uint8_t cs = 0;
 		uint8_t const * buf = reinterpret_cast<uint8_t const *>(buffer);
 		for(uint16_t i = 0; i < len; i++)
 		{
+			cs += buf[i];
 			USART_Transmit(buf[i]);
 		}
+		return cs;
+	}
+	
+	message_t * discard(message_t * in, errid error, uint8_t errinfo)
+	{
+		USART_Transmit(0x77); // magic
+		USART_Transmit(0x21); // v1.0 rsp
+		USART_Transmit(in->sender); 
+		USART_Transmit(localAddress);
+		USART_Transmit(0x04); // cmd
+		USART_Transmit(0x03); // len
+		USART_Transmit(in->command);
+		USART_Transmit(uint8_t(error));
+		USART_Transmit(errinfo);
+		USART_Transmit(in->command + uint8_t(error) + errinfo); // cs
+		return nullptr;
 	}
 	
 	message_t * receive()
 	{
-		bool checksumGood;
-		message_t * msg = receiveRaw(checksumGood);
+		uint8_t checksum;
+		message_t * msg = receiveRaw(checksum);
 		if(msg == nullptr) {
 			return nullptr;
 		}
@@ -282,12 +314,12 @@ namespace mesh
 		   msg->receiver != 0x00 &&
 			 msg->receiver != 0xFF)
 		{
+			// This message was not meant for us
 			return nullptr;
 		}
 		
-		if(checksumGood == false) {
-			// TODO: For now let's just silently ignore invalid checksums
-			// return nullptr; // We could discard messages here
+		if(msg->checksum != checksum) {
+			return discard(msg, errid::invalidChecksum, checksum);
 		}
 		
 		if(msg->flags & 0x01) {
@@ -295,6 +327,7 @@ namespace mesh
 			return msg;
 		}
 	
+		uint8_t cs;
 		switch(msg->command)
 		{
 			case 0x01: // discover
@@ -320,8 +353,8 @@ namespace mesh
 						USART_Transmit(0x01); // cmd
 						USART_Transmit(sizeof(deviceInfo) + 1); // len
 						USART_Transmit(0x01); // id
-						write(&deviceInfo, sizeof(deviceInfo));
-						USART_Transmit(0x00); // cs
+						cs = write(&deviceInfo, sizeof(deviceInfo));
+						USART_Transmit(cs + 0x01); // cs
 						return nullptr;
 					case 0x02: // Query device name
 						USART_Transmit(0x77); // magic
@@ -331,12 +364,12 @@ namespace mesh
 						USART_Transmit(0x01); // cmd
 						USART_Transmit(sizeof(deviceName) + 1); // len
 						USART_Transmit(0x02); // id
-						write(&deviceName, sizeof(deviceName));
-						USART_Transmit(0x00); // cs
+						cs = write(&deviceName, sizeof(deviceName));
+						USART_Transmit(cs + 0x02); // cs
 						return nullptr;
+					default:
+						return discard(msg, errid::invalidDeviceInfo, *((uint8_t*)msg->data));
 				}
-				// TODO: Unknown query, return message?
-				return msg;
 			case 0x05: // write
 			{
 				if(msg->length < 3) {
@@ -379,8 +412,8 @@ namespace mesh
 				USART_Transmit(0x06); // cmd
 				USART_Transmit(0x03); // len
 				USART_Transmit(*reg); // register
-				write(&value, sizeof value);
-				USART_Transmit(0x00); // cs
+				cs = write(&value, sizeof value);
+				USART_Transmit(cs + *reg); // cs
 				
 				return nullptr;
 			}
