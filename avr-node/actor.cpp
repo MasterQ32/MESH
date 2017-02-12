@@ -197,7 +197,15 @@ int main()
 	
 	DDRB = 0xFF;
 	
-	PORTB = 0x7F;
+	for(int i = 0; i < 8; i++) {
+		PORTB = ~(1<<i);
+		delay_ms(125);
+	}
+	for(int i = 6; i >= 0; i--) {
+		PORTB = ~(1<<i);
+		delay_ms(125);
+	}
+	PORTB = 0xFF;
 	
 	mesh::localAddress = 0x42;
 	
