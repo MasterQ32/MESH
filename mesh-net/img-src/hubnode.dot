@@ -1,0 +1,15 @@
+graph
+{
+	rankdir=LR;
+
+	X1 -- N;
+	X2 -- N;
+	N -- X3;
+	N -- X4;
+	
+	X1 [shape=point, label=""];
+	X2 [shape=point, label=""];
+	X3 [shape=point, label=""];
+	X4 [shape=point, label=""];
+	N [shape=box, label="Hub Node"];
+}

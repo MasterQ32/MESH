@@ -27,3 +27,15 @@
 *.exe
 *.out
 *.app
+
+# Documentation Artifacts
+*.htm
+*.png
+
+# Qt
+*.pro.user
+
+sim/sim
+
+# AVR
+*.hex

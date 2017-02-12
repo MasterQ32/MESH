@@ -1,0 +1,10 @@
+graph
+{
+	rankdir=LR;
+
+	S -- N -- E;
+	
+	S [shape=point, label=""];
+	N [shape=box, label="Serial Node"];
+	E [shape=point, label=""];
+}

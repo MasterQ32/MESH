@@ -1,0 +1,9 @@
+graph
+{
+	rankdir=LR;
+
+	S -- N;
+	
+	S [shape=point, label=""];
+	N [shape=box, label="End Node"];
+}

@@ -1,0 +1,100 @@
+body
+{
+	width: 800px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+pre
+{
+	background-color: #EEE;
+	width: 98%;
+	padding: 1%;
+}
+
+heading
+{
+	display:block;
+	text-align: center;
+	font-size: 3em;
+	font-weight: bold;
+}
+
+h1
+{
+	border-bottom: 1px solid silver;
+}
+
+todo
+{
+	display: block;
+	color: white;
+	background-color: red;
+	border: 1px solid black;
+	padding: 0.5em;
+}
+
+todo:before
+{
+	content: 'TODO';
+	display: block;
+	font-size: larger;
+	font-weight: bold;
+	color: white;
+	border-bottom: 1px solid silver;
+	margin-bottom: 4px;
+}
+
+code {
+	/* background-color: #eee; */
+	color: #006;
+	font-size: 1.15em;
+	font-weight: bold;
+}
+pre {
+	width: 90%;
+	margin-left: 5%;
+	margin-right: 5%;
+	background-color: #eee;
+	padding: 0.5em;
+}
+
+
+span.uline,uline {
+	text-decoration: underline;
+}
+span.oline,overline {
+	text-decoration: overline;
+}
+
+
+
+
+
+table
+{
+	border-collapse: collapse;
+	width: 100%;
+}
+
+th
+{
+	background-color: cornflowerblue;
+}
+td,th
+{
+	border: 1px solid dimgray;
+	padding: 0.2em;
+  white-space: nowrap;
+	vertical-align: top;
+}
+th {
+	text-align: center;
+}
+td:nth-child(1) {
+	text-align: right;
+}
+td:last-child {
+  width:100%;
+	white-space: normal;
+}
